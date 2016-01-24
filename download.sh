@@ -1,6 +1,6 @@
 #!/bin/bash
 # Program:
-#	±q¥qªk°|ºô¯¸¤U¸üÄÀ¦r¥ş¤å
+#	å¾å¸æ³•é™¢ç¶²ç«™ä¸‹è¼‰é‡‹å­—å…¨æ–‡
 start=1
 end=734
 for(( expno=$start; expno<=$end; expno=expno+1 ))

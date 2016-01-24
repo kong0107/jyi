@@ -1,6 +1,3 @@
-var number = parseInt(process.argv[2]);
-if(isNaN(number)) throw "must have an integer argument";
-
 var fs = require('fs');
 var jsdom = require('jsdom');
 var iconv = require('iconv-lite');
@@ -21,15 +18,22 @@ var getHref = function(element) {
 	return /href="([^"]+)"/.exec(element.innerHTML)[1];
 }
 
+for(var number = 1; number <= 734; ++number) {
+//----
+console.log("\n#" + number);
 var result = {};
 var document = jsdom.jsdom(iconv.decode(fs.readFileSync('./downloads/p03_01/' + number + '.html'), 'Big5').replace(/&nbsp;/g, ' '));
 var ths = document.getElementsByTagName('TH');
 for(var i = 0; i < ths.length; ++i) {
 	var match;
+	var column = ths[i].textContent.trim();
 	var td = ths[i].nextSibling.nextSibling;
 	var text = td.textContent.trim();
 	
-	switch(ths[i].textContent.trim()) {
+	if(i) process.stdout.write(",");
+	process.stdout.write(column);
+	
+	switch(column) {
 		case "解釋字號":
 			result.number = parseInt(/\d+/.exec(text)[0]);
 			if(match = /(【(.+)】)/.exec(text)) result.title = match[2];
@@ -43,18 +47,16 @@ for(var i = 0; i < ths.length; ++i) {
 			result.issue = text;
 			break;
 		case "解釋文":
-			result.holding = getParaList(td.lastChild.childNodes[1].childNodes).join('\n');
+			result.holding = getParaList(td.childNodes).join('\n');
 			break;
 		case "理由書":
-			result.reasoning = getParaList(td.lastChild.childNodes[1].childNodes).join('\n');
+			result.reasoning = getParaList(td.childNodes).join('\n');
 			break;
 		case "相關法條":
-			result.related_articles = text.replace(/\s*(\r\n\s*)+/g, '\n').split('\n');
+			result.related_articles = getParaList(td.lastChild.childNodes[1].childNodes);
 			break;
 		case "事實":
-			var ps = getParaList(td.lastChild.childNodes[1].childNodes).join('\n');
-			if(ps[0].match(/事實摘要$/)) ps.shift();
-			result.facts = ps;
+			result.facts = getParaList(td.childNodes).join('\n');
 			break;
 		case "意見書":
 			result.opinions = true;
@@ -64,11 +66,13 @@ for(var i = 0; i < ths.length; ++i) {
 			break;
 		case "新聞稿、意見書、抄本(含解釋文、理由書、意見書、聲請書及其附件)":
 			if(text)
-				result.documents = text.replace(/\s*(\r\n\s*)+/g, '\n').split('\n');
+				result.documents = getParaList(td.childNodes);
 			break;
 		default:
 			throw "un-recognized column name";
 	}
 }
-fs.writeFileSync('./json/' + number + '.json', JSON.stringify(result));
-console.log(number);
+process.stdout.write("\n");
+fs.writeFileSync('./json/' + number + '.json', JSON.stringify(result, null, "\t"));
+//----
+}
