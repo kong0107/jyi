@@ -1,10 +1,10 @@
 {
   "name": "constitutionalcourt",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "下載中華民國司法院大法官解釋",
   "main": "mergeAll.js",
   "scripts": {
-    "test": "echo test"
+    "start": "node parse.js"
   },
   "repository": {
     "type": "git",

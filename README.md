@@ -20,9 +20,9 @@
 	issue: "",      ///< 爭點
 	holding: "",    ///< 解釋文，有些會分段（如第499號和第585號），則以`\n`為界
 	reasoning: "",  ///< 理由書，分段以`\n`為界
+	facts: "",      ///< 事實摘要，分段以`\n`為界
 
 	/// 以下未完成
-	facts: "",      ///< 事實摘要，分段以`\n`為界
 	honorable_justices: ["", ""],	///< 大法官名單，以主席為首
 	opinions: [     ///< 意見書
 		{
@@ -48,7 +48,7 @@
 使用 npm 的 jsdom 時，注意其 `Node` 類別並沒有 `getElementById`, `getElementsByName` 等相關函數，且遇到不合規定的標籤（如 `<div&nbsp;class='t1'>` ）時運作方式也與真正的瀏覽器不同。
 ```bash
 sh download.sh # 從司法院網站下載全文。
-sh autoparse.sh # 針對每一個釋字執行 `parse.js` ，每個釋字儲存成個別的檔案。
+node parse.js # 將每個釋字網頁轉存成個別的 JSON 。
 node mergeAll.js # 取出每個釋字中需要的部分，湊成 JSON 或 XSS 用的檔案。
 ```
 
