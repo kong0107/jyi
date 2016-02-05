@@ -37,7 +37,6 @@
 				margin: .4em 0;
 				line-height: 150%;
 				padding: .2em;
-				/*border-left: 2px solid #444;*/
 			}
 			p:hover { background-color: #eee; }
 		</style>
@@ -48,8 +47,12 @@
 			<span id="UpdateDate" ng-show="jyis">收錄至第 {{jyis.length}} 號</span>
 		</header>
 		<section>
-			<input ng-model="search" ng-model-options="{debounce: 300}" placeholder="搜尋">
-			<article ng-repeat="jyi in jyis |filter :search |orderBy :'-number' track by $index">
+			<div ng-if="!jyis">讀取中…</div>
+			<form ng-show="jyis">
+				<input ng-model="search" ng-model-options="{debounce: 300}" placeholder="搜尋">
+				<div ng-show="search">搜尋到 {{filtered.length}} 筆解釋</div>
+			</form>
+			<article ng-repeat="jyi in filtered=(jyis |filter :search) |orderBy :'-number' track by $index">
 				<header>
 					<h1>釋字第 {{jyi.number}} 號</h1>
 					<time style="font-size: small; font-size: small; font-weight: normal; font-family: monospace;">{{jyi.date}}</time>
