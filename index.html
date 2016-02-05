@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html ng-app="app" ng-controller="main">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>大法官解釋</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+		<link rel="stylesheet" href="https://kong0107.github.io/mojLawSplitJSON/styles/std.css">
+		<link rel="stylesheet" href="https://kong0107.github.io/mojLawSplitJSON/styles/main.css">
+		<script>
+			angular.module('app', []).controller('main', function($scope, $http) {
+				$http.get('json/all.json', {cache: true}).then(function(res) {
+					$scope.jyis = res.data.slice(1);
+					$scope.jyis.forEach(function(jyi) {
+						if(!jyi.reasoning) return;
+						var pos = jyi.reasoning.indexOf('大法官會議主席');
+						if(pos != -1) jyi.reasoning = jyi.reasoning.substr(0, pos).trim();
+					});
+				}, function(res) {console.error(res);});
+			});
+		</script>
+		<style>
+			body {
+				font-family: "微軟正黑體", "Calibri", arial;
+			}
+			article { margin: .5em 0; padding: .5em; }
+			article:nth-child(even) { background-color: #ddd; }
+			h1 {
+				display: inline-block;
+				font-size: 150%;
+			}
+			h2 {
+				margin: .3em 0;
+				font-size: 120%;
+			}
+			p {
+				margin: .4em 0;
+				line-height: 150%;
+				padding: .2em;
+				/*border-left: 2px solid #444;*/
+			}
+			p:hover { background-color: #eee; }
+		</style>
+	</head>
+	<body>
+		<header>
+			<span id="brand">大法官解釋</span>
+			<span id="UpdateDate" ng-show="jyis">收錄至第 {{jyis.length}} 號</span>
+		</header>
+		<section>
+			<input ng-model="search" ng-model-options="{debounce: 300}" placeholder="搜尋">
+			<article ng-repeat="jyi in jyis |filter :search |orderBy :'-number' track by $index">
+				<header>
+					<h1>釋字第 {{jyi.number}} 號</h1>
+					<time style="font-size: small; font-size: small; font-weight: normal; font-family: monospace;">{{jyi.date}}</time>
+					<p class="issue">{{jyi.issue}}</p>
+				</header>
+				<section>
+					<h2>解釋文</h2>
+					<p class="holding" ng-repeat="para in jyi.holding.split('\n') track by $index">{{para}}</p>
+				</section>
+				<section ng-if="jyi.reasoning">
+					<h2>理由書</h2>
+					<p class="reasoning" ng-repeat="para in jyi.reasoning.split('\n') track by $index">{{para}}</p>
+				</section>
+			</article>
+		</section>
+		<footer>
+			<nav>
+				<ul class="inlineList">
+					<li><a href="https://www.facebook.com/kong.sex">Author</a></li>
+					<li><a href="https://github.com/kong0107/jyi">Program Codes</a></li>
+					<li><a href="http://www.judicial.gov.tw/constitutionalcourt/p03.asp">Data Source</a></li>
+				</ul>
+			</nav>
+		</footer>
+	</body>
+</html>
