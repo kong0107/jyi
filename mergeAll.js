@@ -7,7 +7,7 @@ var titles = [''];
 var issues = [''];
 var holdings = [''];
 
-for(var i = 1; i <= 734; ++i) {
+for(var i = 1; i <= 735; ++i) {
 	var jyi = fs.readFileSync('./json/' + i + '.json').toString();
 	all += ',\n' + jyi;
 	jyi = JSON.parse(jyi);
@@ -18,11 +18,11 @@ for(var i = 1; i <= 734; ++i) {
 	console.log(i);
 }
 
-all    += ']';
-dates   = JSON.stringify(dates   ).replace(/,/g,  ',\n');
-titles  = JSON.stringify(titles  ).replace(/,/g,  ',\n');
-issues  = JSON.stringify(issues  ).replace(/",/g, '",\n');
-holdings= JSON.stringify(holdings).replace(/,/g,  ',\n');
+all    += ']\n';
+dates   = JSON.stringify(dates   ).replace(/,/g,  ',\n') + '\n';
+titles  = JSON.stringify(titles  ).replace(/,/g,  ',\n') + '\n';
+issues  = JSON.stringify(issues  ).replace(/",/g, '",\n') + '\n';
+holdings= JSON.stringify(holdings).replace(/,/g,  ',\n') + '\n';
 
 fs.writeFileSync('./json/all.json',     all);
 fs.writeFileSync('./json/dates.json',   dates);
