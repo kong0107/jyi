@@ -7,7 +7,12 @@ var titles = [''];
 var issues = [''];
 var holdings = [''];
 
-for(var i = 1; i <= 735; ++i) {
+//for(var i = 1; i <= 735; ++i) {
+fs.readdirSync('./json/').forEach(filename => {
+    const match = /^(\d+)\.json$/.exec(filename);
+    if(!match) return;
+    const i = parseInt(match[1]);
+
 	var jyi = fs.readFileSync('./json/' + i + '.json').toString();
 	all += ',\n' + jyi;
 	jyi = JSON.parse(jyi);
@@ -16,7 +21,7 @@ for(var i = 1; i <= 735; ++i) {
 	holdings[i] = jyi.holding;
 	titles[i] = jyi.title ? jyi.title : '';
 	console.log(i);
-}
+});
 
 all    += ']\n';
 dates   = JSON.stringify(dates   ).replace(/,/g,  ',\n') + '\n';

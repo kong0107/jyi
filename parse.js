@@ -1,78 +1,64 @@
-var fs = require('fs');
-var jsdom = require('jsdom');
-var iconv = require('iconv-lite');
-var zeroFill = function(num, strlen){
-	if(typeof num == "undefined" || !num.toString) num = "0";
-	for(num = num.toString(); num.length < strlen; num = "0" + num);
-	return num;
-}
-var getParaList = function(nodeList) {
-	var result = [];
-	for(var i = 0; i < nodeList.length; ++i) {
-		var p = nodeList[i].textContent.trim();
-		if(p.length) result.push(p);
-	}
-	return result;
-}
-var getHref = function(element) {
-	return /href="([^"]+)"/.exec(element.innerHTML)[1];
-}
+"use strict";
+const fs = require("fs");
+const jsdom = require("jsdom");
+const iconv = require("iconv-lite");
 
-for(var number = 1; number <= 735; ++number) {
-//----
-console.log("\n#" + number);
-var result = {};
-var document = jsdom.jsdom(iconv.decode(fs.readFileSync('./downloads/p03_01/' + number + '.html'), 'Big5').replace(/&nbsp;/g, ' '));
-var ths = document.getElementsByTagName('TH');
-for(var i = 0; i < ths.length; ++i) {
-	var match;
-	var column = ths[i].textContent.trim();
-	var td = ths[i].nextSibling.nextSibling;
-	var text = td.textContent.trim();
-	
-	if(i) process.stdout.write(",");
-	process.stdout.write(column);
-	
-	switch(column) {
-		case "解釋字號":
-			result.number = parseInt(/\d+/.exec(text)[0]);
-			if(match = /(【(.+)】)/.exec(text)) result.title = match[2];
-			break;
-		case "解釋日期":
-		case "解釋公布日期":
-			match = /(\d+)年(\d+)月(\d+)日/.exec(text);
-			result.date = (parseInt(match[1]) + 1911) + '-' + zeroFill(match[2], 2) + '-' + zeroFill(match[3], 2);
-			break;
-		case "解釋爭點":
-			result.issue = text;
-			break;
-		case "解釋文":
-			result.holding = getParaList(td.childNodes).join('\n');
-			break;
-		case "理由書":
-			result.reasoning = getParaList(td.childNodes).join('\n');
-			break;
-		case "相關法條":
-			result.related_articles = getParaList(td.lastChild.childNodes[1].childNodes);
-			break;
-		case "事實":
-			result.facts = getParaList(td.childNodes).join('\n');
-			break;
-		case "意見書":
-			result.opinions = true;
-			break;
-		case "相關附件":
-			result.related_annexes = true;
-			break;
-		case "新聞稿、意見書、抄本(含解釋文、理由書、意見書、聲請書及其附件)":
-			if(text)
-				result.documents = getParaList(td.childNodes);
-			break;
-		default:
-			throw "un-recognized column name";
-	}
-}
-process.stdout.write("\n");
-fs.writeFileSync('./json/' + number + '.json', JSON.stringify(result, null, "\t"));
-//----
-}
+const zeroFill = (num, length) => num.toString().padStart(length, "0");
+const getParas = elem =>
+    Array.from(elem.getElementsByClassName("expreson_content"))
+    .map(para => para.textContent.trim())
+;
+
+fs.readdirSync("./downloads/").forEach(filename => {
+    const match = /^(\d+)\.html$/.exec(filename);
+    if(!match) return;
+    const number = match[1];
+    console.log(number);
+    const html = fs.readFileSync(`./downloads/${number}.html`);
+    const document = jsdom.jsdom(iconv.decode(html, "Big5").replace(/&nbsp;/g, " "));
+    const ths = document.getElementsByTagName("TH");
+    const result = {};
+    for(let i = 0; i < ths.length; ++i) {
+        let match;
+        const column = ths[i].textContent.trim();
+        const td = ths[i].nextSibling.nextSibling;
+        const text = td.textContent.trim();
+        switch(column) {
+            case "解釋字號":
+                result.number = parseInt(/\d+/.exec(text)[0]);
+                if(match = /【(.+)】/.exec(text)) result.title = match[1];
+                break;
+            case "解釋日期":
+            case "解釋公布日期":
+            case "解釋公布院令":
+                match = /(\d+)年(\d+)月(\d+)日/.exec(text);
+                result.date = (parseInt(match[1]) + 1911) + '-' + zeroFill(match[2], 2) + '-' + zeroFill(match[3], 2);
+                break;
+            case "解釋爭點":
+                result.issue = text;
+                break;
+            case "解釋文":
+                result.holding = getParas(td).join("\n");
+                break;
+            case "理由書":
+                result.reasoning = getParas(td).join("\n");
+                break;
+            case "解釋摘要":
+            case "理由書附件":
+            case "相關法條":
+            case "事實":
+            case "事實摘要":
+            case "意見書":
+            case "更正意見書":
+            case "相關附件":
+            case "聲請書 / 確定終局裁判":
+            case "解釋更正院令":
+            case "新聞稿、意見書、抄本(含解釋文、理由書、意見書、聲請書及其附件)":
+                break;
+            default:
+                console.error(`JYI ${number} has unknown column name "${column}"`);
+
+        }
+    }
+    fs.writeFileSync('./json/' + number + '.json', JSON.stringify(result, null, "\t"));
+});
