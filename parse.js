@@ -4,10 +4,27 @@ const jsdom = require("jsdom");
 const iconv = require("iconv-lite");
 
 const zeroFill = (num, length) => num.toString().padStart(length, "0");
-const getParas = elem =>
-    Array.from(elem.getElementsByClassName("expreson_content"))
-    .map(para => para.textContent.trim())
-;
+const getParas = elem => {
+    const result = [];
+    const childs = elem.childNodes;
+    for(let i = 0; i < childs.length; ++i) {
+        const target = childs[i];
+        switch(target.tagName) {
+            case "DIV":
+                result.push(target.lastChild.textContent.trim());
+                break;
+            case "BR":
+                break;
+            default:
+                if(target.textContent.startsWith("大法官會議")) return result;
+                const weirdPara = target.textContent.trim();
+                if(weirdPara) result[result.length - 1] += " " + weirdPara;
+        }
+    }
+    return result;
+    /*Array.from(elem.getElementsByClassName("expreson_content"))
+    .map(para => para.textContent.trim())*/
+};
 
 fs.readdirSync("./downloads/").forEach(filename => {
     const match = /^(\d+)\.html$/.exec(filename);
