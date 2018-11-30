@@ -14,7 +14,7 @@ const download = (url, filename) => {
 };
 
 const queue = [];
-for(let number = 725; number <= 729; ++number) {
+for(let number = 770; number <= 770; ++number) {
     queue.push(() => {
         const url = (number <= 736)
             ? `https://www.judicial.gov.tw/constitutionalcourt/p03_01.asp?expno=${number}`
