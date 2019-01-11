@@ -14,7 +14,7 @@ const download = (url, filename) => {
 };
 
 const queue = [];
-for(let number = 772; number <= 773; ++number) {
+for(let number = 774; number <= 774; ++number) {
     queue.push(() => {
         const url = (number <= 736)
             ? `https://www.judicial.gov.tw/constitutionalcourt/p03_01.asp?expno=${number}`
@@ -23,7 +23,7 @@ for(let number = 772; number <= 773; ++number) {
         console.log(number);
         return download(url, `./downloads/${number}.html`);
     });
-    
+
     // 刻意等待
     queue.push(() => new Promise(resolve => setTimeout(resolve, 1000 + 1000 * Math.random())));
 }
