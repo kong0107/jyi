@@ -1,4 +1,5 @@
 const fs = require('fs');
+const stringify = obj => JSON.stringify(obj, null, "\t");
 
 const all = [{}];
 fs.readdirSync('./json/').forEach(filename => {
@@ -11,6 +12,7 @@ fs.readdirSync('./json/').forEach(filename => {
 	console.log(i);
 });
 
-fs.writeFileSync('./json/all.json', JSON.stringify(all, null, "\t"));
-fs.writeFileSync('./json/issues.json', JSON.stringify(all.map(elem => elem.issue), null, "\t"));
-fs.writeFileSync('./json/holdings.json',JSON.stringify(all.map(elem => elem.holding), null, "\t"));
+fs.writeFileSync('./json/all.json', stringify(all));
+fs.writeFileSync('./json/issues.json', stringify(all.map(elem => elem.issue)));
+fs.writeFileSync('./json/holdings.json', stringify(all.map(elem => elem.holding)));
+fs.writeFileSync('./json/basic.json', stringify(all.map(elem => Object.assign({}, elem, {reasoning: undefined}))));
