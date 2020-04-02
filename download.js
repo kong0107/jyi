@@ -14,12 +14,9 @@ const download = (url, filename) => {
 };
 
 const queue = [];
-for(let number = 774; number <= 774; ++number) {
+for(let number = 1; number <= 781; ++number) {
     queue.push(() => {
-        const url = (number <= 736)
-            ? `https://www.judicial.gov.tw/constitutionalcourt/p03_01.asp?expno=${number}`
-            : `https://www.judicial.gov.tw/constitutionalcourt/p03_01_1.asp?expno=${number}`
-        ;
+        const url = `https://cons.judicial.gov.tw/jcc/zh-tw/jep03/show?expno=${number}`;
         console.log(number);
         return download(url, `./downloads/${number}.html`);
     });

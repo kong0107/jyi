@@ -1,6 +1,6 @@
 {
-  "name": "constitutionalcourt",
-  "version": "0.1.2",
+  "name": "jyi",
+  "version": "0.2.0",
   "description": "下載中華民國司法院大法官解釋",
   "main": "mergeAll.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kong0107/constitutionalcourt.git"
+    "url": "git+https://github.com/kong0107/jyi.git"
   },
   "keywords": [
     "law"
@@ -16,9 +16,9 @@
   "author": "kong0107",
   "license": "CC0",
   "bugs": {
-    "url": "https://github.com/kong0107/constitutionalcourt/issues"
+    "url": "https://github.com/kong0107/jyi/issues"
   },
-  "homepage": "https://github.com/kong0107/constitutionalcourt#readme",
+  "homepage": "https://github.com/kong0107/jyi#readme",
   "dependencies": {
     "iconv-lite": "^0.4.13",
     "jsdom": "^7.2.2"
