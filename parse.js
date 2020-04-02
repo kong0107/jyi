@@ -1,21 +1,18 @@
 "use strict";
 const fs = require("fs");
-const jsdom = require("jsdom");
-
+const { JSDOM } = require("jsdom");
 const zeroFill = (num, length) => num.toString().padStart(length, "0");
 
-fs.readdirSync("./downloads/").forEach(filename => {
-    let match = /^(\d+)\.html$/.exec(filename);
-    if(!match) return;
-    const number = match[1];
-    console.log(number);
-    const html = fs.readFileSync(`./downloads/${number}.html`);
-    const items = jsdom.jsdom(html).querySelectorAll("#ExplainTable > div > .item");
-    if(!items.length) {
-        console.error("HTML parsing error");
-        return;
-    }
+fs.readdirSync("./downloads/")
+.filter(filename => /^\d+\.html$/.test(filename))
+.forEach(filename => {
+    console.log(filename);
+    const html = fs.readFileSync(`./downloads/${filename}`);
+    const domWindow = (new JSDOM(html)).window;
+    const items = domWindow.document.querySelectorAll("#ExplainTable > div > .item");
+    if(!items.length) return console.error("HTML parsing error");
 
+    let match;
     const result = {};
     for(let i = 0; i < items.length; ++i) {
         const column = items[i].firstElementChild.textContent.trim();
@@ -64,12 +61,13 @@ fs.readdirSync("./downloads/").forEach(filename => {
             case "更正意見書": // #738, #751 only
                 break;
             default:
-                console.error(`JYI ${number} has unknown column name "${column}"`);
+                console.error(`unknown column name "${column}"`);
 
         }
     }
 
-    fs.writeFileSync('./json/' + number + '.json', JSON.stringify(result, null, "\t"));
+    domWindow.close(); // release memory
+    fs.writeFileSync(`./json/${result.number}.json`, JSON.stringify(result, null, "\t"));
 });
 
 console.log("Parsing finished.");
