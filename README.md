@@ -40,3 +40,5 @@ CC0
 * 配合司法院新版網站。
 * 取消輸出 XSS 。
 * 取消輸出 `dates.json` 和 `titles.json` 。
+* 取消上傳 `downloads/*.html` 。
+* 恢復大部分釋字各段首的兩個全形空白。
