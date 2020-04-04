@@ -1,81 +1,222 @@
-<!DOCTYPE HTML>
-<html ng-app="app" ng-controller="main">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>大法官解釋</title>
-		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
-		<link rel="stylesheet" href="https://kong0107.github.io/mojLawSplitJSON/styles/std.css">
-		<link rel="stylesheet" href="https://kong0107.github.io/mojLawSplitJSON/styles/main.css">
-		<script>
-			angular.module('app', []).controller('main', function($scope, $http) {
-				$http.get('json/all.json', {cache: true}).then(function(res) {
-					$scope.jyis = res.data.slice(1);
-					$scope.jyis.forEach(function(jyi) {
-						if(!jyi.reasoning) return;
-						var pos = jyi.reasoning.indexOf('大法官會議主席');
-						if(pos != -1) jyi.reasoning = jyi.reasoning.substr(0, pos).trim();
-					});
-				}, function(res) {console.error(res);});
-			});
-		</script>
-		<style>
-			body {
-				font-family: "微軟正黑體", "Calibri", arial;
-			}
-			article { margin: .5em 0; padding: .5em; }
-			article:nth-child(even) { background-color: #ddd; }
-			h1 {
-				display: inline-block;
-				font-size: 150%;
-			}
-			h2 {
-				margin: .3em 0;
-				font-size: 120%;
-			}
-			p {
-				margin: .4em 0;
-				line-height: 150%;
-				padding: .2em;
-			}
-			p:hover { background-color: #eee; }
-		</style>
-	</head>
-	<body>
-		<header>
-			<span id="brand">大法官解釋</span>
-			<span id="UpdateDate" ng-show="jyis">收錄至第 {{jyis.length}} 號</span>
-		</header>
-		<section>
-			<div ng-if="!jyis">讀取中…</div>
-			<form ng-show="jyis">
-				<input ng-model="search" ng-model-options="{debounce: 300}" placeholder="搜尋">
-				<div ng-show="search">搜尋到 {{filtered.length}} 筆解釋</div>
-			</form>
-			<article ng-repeat="jyi in filtered=(jyis |filter :search) |orderBy :'-number' track by $index">
-				<header>
-					<h1>釋字第 {{jyi.number}} 號</h1>
-					<time style="font-size: small; font-size: small; font-weight: normal; font-family: monospace;">{{jyi.date}}</time>
-					<p class="issue">{{jyi.issue}}</p>
-				</header>
-				<section>
-					<h2>解釋文</h2>
-					<p class="holding" ng-repeat="para in jyi.holding.split('\n') track by $index">{{para}}</p>
-				</section>
-				<section ng-if="jyi.reasoning">
-					<h2>理由書</h2>
-					<p class="reasoning" ng-repeat="para in jyi.reasoning.split('\n') track by $index">{{para}}</p>
-				</section>
-			</article>
-		</section>
-		<footer>
-			<nav>
-				<ul class="inlineList">
-					<li><a href="https://www.facebook.com/kong.sex">Author</a></li>
-					<li><a href="https://github.com/kong0107/jyi">Program Codes</a></li>
-					<li><a href="http://www.judicial.gov.tw/constitutionalcourt/p03.asp">Data Source</a></li>
-				</ul>
-			</nav>
-		</footer>
-	</body>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>大法官解釋</title>
+	<script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+	<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+	<link
+		rel="stylesheet"
+		href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+		crossorigin="anonymous"
+	>
+	<style>
+		.line-counter {
+			counter-reset: para;
+		}
+		.line-counter > * {
+			margin-left: 2rem;
+			position: relative;
+		}
+		.line-counter > *::before {
+			counter-increment: para;
+			content: counter(para);
+			font-size: 1rem;
+			color: gray;
+			position: absolute;
+			left: -2rem;
+			text-align: right;
+			width: 1rem;
+		}
+	</style>
+</head>
+<body>
+	<div id="root" class="container bg-dark text-white p-0">
+		讀取中…
+	</div>
+	<script>
+const {Component: C, createElement: e} = React;
+const lines2paras = text => text.split("\n").map((para, index) => e("p", {key: index.toString()}, para));
+const parseArticle = text => text.split("\n").map(
+	(line, index) => e(/^\s/.test(line) ? "p" : "p", {key: index.toString()}, line.trim())
+);
+
+class Main extends C {
+	/// React methods
+	constructor(props) {
+		super(props);
+		const search = this.props.hash.substr(1);
+		this.state = {
+			search,
+			error: null, // 記錄錯誤
+			jyis: [],
+			fetchingPromises: []
+		};
+		this.onSearchChange = this.onSearchChange.bind(this);
+	}
+	componentDidMount() {
+		this.load();
+	}
+	render() {
+		const number = this.getSearchNumber();
+		const contentElem = number
+			? e(JYISingle, this.state.jyis[number])
+			: e(JYIList, {jyis: this.state.jyis})
+		;
+		return e("div", {className: ""},
+			e(Header, {search: this.state.search, onSearchChange: this.onSearchChange}),
+			contentElem,
+			e(Footer)
+		);
+	}
+
+	/// bound methods
+	onSearchChange(text) {
+		this.setState({search: text});
+		this.load(this.getSearchNumber(text));
+	}
+
+	/// private methods
+	getSearchNumber(search = this.state.search) {
+		return /^[1-9]\d{0,3}$/.test(search) ? parseInt(search) : 0;
+	}
+
+	load(number = this.getSearchNumber()) {
+		const {fetchingPromises: fps, jyis} = this.state;
+		if(fps[number]) return fps[number];
+
+		if(number) {
+			//#79 以前的沒有理由書，所以若已經讀取 `basic.json` 了，可以抓那邊的資料就好。
+			if(fps[0] && number < 80)
+				fps[number] = fps[0].then(jyis => jyis[number]);
+			else fps[number] =
+				fetch(`./json/${number}.json`)
+				.then(res => res.json())
+				.then(jyi => {
+					jyis[number] = jyi;
+					this.setState({jyis});
+					console.log(`Loaded JYI ${number}`);
+					return jyi;
+				})
+				.catch(reason => {
+					this.setState({error: `抓不到釋字 ${number}`});
+					throw reason;
+				})
+			;
+		}
+		else fps[0] =
+			fetch(`./json/basic.json`)
+			.then(res => res.json())
+			.then(jyis => {
+				this.state.jyis.forEach(jyi => {
+					if(jyi) jyis[number] = jyi;
+				});
+				this.setState({jyis});
+				console.log("Loaded `basic.json`");
+				return jyis;
+			})
+			.catch(reason => {
+				this.setState({error: "抓不到釋字列表"});
+				throw reason;
+			})
+		;
+		fps[number].catch(reason => {
+			delete fps[number];
+			this.setState({fetchingPromises: fps});
+			throw reason;
+		});
+		this.setState({fetchingPromises: fps});
+		return fps[number];
+	}
+}
+
+class Header extends C {
+	/// React
+	constructor(props) {
+		super(props);
+		this.handleSearchChange = this.handleSearchChange.bind(this);
+	}
+	render() {
+		return e("header", {className: "bg-secondary text-white p-2"},
+			e("div", null, "司法院大法官解釋"),
+			e("input", {
+				className: "form-control",
+				placeholder: "搜尋",
+				value: this.props.search,
+				onChange: this.handleSearchChange
+			})
+		);
+	}
+
+	/// bound methods
+	handleSearchChange(event) {
+		event.preventDefault();
+		this.props.onSearchChange(event.target.value);
+	}
+}
+
+class JYIList extends C {
+	render() {
+		return e("main", {className: "p-2"},
+			this.props.jyis.slice().sort((a, b) => b.number - a.number).map(jyi => e(JYIListItem, jyi))
+		);
+	}
+}
+
+class JYIListItem extends C {
+	render() {
+		return e("article", {className: "p-2"},
+			e("h2", {className: "sticky-top bg-dark pb-2 d-flex flex-row"},
+				e("div", {className: ""}, this.props.number),
+				e("div", {className: "pl-2"}, this.props.title)
+			),
+			e("time", {dateTime: this.props.date, className: "small text-white-50"}, this.props.date),
+			this.props.issue && e("section", null,
+				e("h3", null, "爭點"),
+				e("div", null, lines2paras(this.props.issue))
+			),
+			this.props.holding && e("section", null,
+				e("h3", null, "解釋文"),
+				e("div", {className: "line-counter"}, parseArticle(this.props.holding))
+			)
+		);
+	}
+}
+
+class JYISingle extends C {
+	render() {
+		if(!this.props.number) return e("main", null, "讀取中…");
+		return e("main", {className: "p-2"},
+			e("h1", {className: "sticky-top bg-dark pb-2 d-flex flex-row"},
+				e("div", {className: ""}, this.props.number),
+				e("div", {className: "pl-2"}, this.props.title)
+			),
+			e("time", {dateTime: this.props.date, className: "small text-white-50"}, this.props.date),
+			this.props.issue && e("section", null,
+				e("h2", null, "爭點"),
+				e("div", null, lines2paras(this.props.issue))
+			),
+			this.props.holding && e("section", null,
+				e("h2", null, "解釋文"),
+				e("div", {className: "line-counter"}, parseArticle(this.props.holding))
+			),
+			this.props.reasoning && e("section", null,
+				e("h2", null, "理由書"),
+				e("div", {className: "line-counter"}, parseArticle(this.props.reasoning))
+			)
+		);
+	}
+}
+
+class Footer extends C {
+	render() {
+		return e("footer", {className: "bg-secondary text-white p-2"}, "footer");
+	}
+}
+
+ReactDOM.render(e(Main, location), document.getElementById("root"));
+	</script>
+</body>
 </html>

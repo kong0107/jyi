@@ -1,6 +1,6 @@
 {
   "name": "jyi",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "下載中華民國司法院大法官解釋",
   "main": "mergeAll.js",
   "scripts": {

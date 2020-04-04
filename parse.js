@@ -34,7 +34,7 @@ fs.readdirSync("./downloads/")
             case "理由書":
                 const paras = [];
                 const paraElems = contentElem.querySelectorAll("pre");
-                for(let i = 0; i < paraElems.length; ++i) 
+                for(let i = 0; i < paraElems.length; ++i)
                     paras.push(
                         paraElems[i].textContent.trimEnd()
                         .replace(/\s*\n\s+/g, '')
