@@ -47,7 +47,7 @@ class Main extends C {
 	/// React methods
 	constructor(props) {
 		super(props);
-		const search = this.props.hash.substr(1);
+		const search = decodeURI(this.props.hash.substr(1));
 		this.state = {
 			search,
 			error: null, // 記錄錯誤
@@ -61,10 +61,20 @@ class Main extends C {
 	}
 	render() {
 		const number = this.getSearchNumber();
-		const contentElem = number
-			? e(JYISingle, this.state.jyis[number])
-			: e(JYIList, {jyis: this.state.jyis})
-		;
+		let contentElem = e(JYISingle, this.state.jyis[number]);
+		if(!number) {
+			const search = this.state.search;
+			const jyis = this.state.jyis.filter(jyi => {
+				if(!jyi.number) return false;
+				if(!search) return true;
+				for(const p in jyi) {
+					if(typeof jyi[p] != "string") continue;
+					if(jyi[p].indexOf(search) != -1) return true;
+				}
+				return false;
+			}).sort((a, b) => b.number - a.number);
+			contentElem = e(JYIList, {jyis});
+		}
 		return e("div", {className: ""},
 			e(Header, {search: this.state.search, onSearchChange: this.onSearchChange}),
 			contentElem,
@@ -76,6 +86,7 @@ class Main extends C {
 	onSearchChange(text) {
 		this.setState({search: text});
 		this.load(this.getSearchNumber(text));
+		location.hash = text;
 	}
 
 	/// private methods
@@ -111,8 +122,9 @@ class Main extends C {
 			.then(res => res.json())
 			.then(jyis => {
 				this.state.jyis.forEach(jyi => {
-					if(jyi) jyis[number] = jyi;
+					if(jyi) jyis[jyi.number] = jyi;
 				});
+				jyis.forEach(jyi => jyi.key = jyi.number || 0);
 				this.setState({jyis});
 				console.log("Loaded `basic.json`");
 				return jyis;
@@ -160,26 +172,17 @@ class Header extends C {
 class JYIList extends C {
 	render() {
 		return e("main", {className: "p-2"},
-			this.props.jyis.slice().sort((a, b) => b.number - a.number).map(jyi => e(JYIListItem, jyi))
+			this.props.jyis.map(jyi => e(JYIListItem, jyi))
 		);
 	}
 }
 
 class JYIListItem extends C {
 	render() {
-		return e("article", {className: "p-2"},
-			e("h2", {className: "sticky-top bg-dark pb-2 d-flex flex-row"},
-				e("div", {className: ""}, this.props.number),
-				e("div", {className: "pl-2"}, this.props.title)
-			),
-			e("time", {dateTime: this.props.date, className: "small text-white-50"}, this.props.date),
-			this.props.issue && e("section", null,
-				e("h3", null, "爭點"),
-				e("div", null, lines2paras(this.props.issue))
-			),
-			this.props.holding && e("section", null,
-				e("h3", null, "解釋文"),
-				e("div", {className: "line-counter"}, parseArticle(this.props.holding))
+		return e("dl", {className: "row m-2 border-bottom border-secondary"},
+			e("dt", {className: "col-1 text-right"}, this.props.number),
+			e("dd", {className: "col-11 mb-0"},
+				lines2paras(this.props.title || this.props.issue)
 			)
 		);
 	}
