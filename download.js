@@ -22,8 +22,18 @@ async function download(url, filepath) {
         ws.on('error', onError);
 
         const request = https.get(url, res => {
-            if(res.statusCode !== 200) return onError(res.statusMessage);
-            res.pipe(ws);
+            switch(res.statusCode) {
+                case 200:
+                    res.pipe(ws);
+                    break;
+                case 301:
+                case 302:
+                    url = 'https://cons.judicial.gov.tw' + res.headers.location;
+                    download(url, filepath).then(resolve, reject);
+                    break;
+                default:
+                    onError(res.statusMessage);
+            }
         });
         request.on('error', onError);
         request.end();
@@ -31,12 +41,12 @@ async function download(url, filepath) {
 }
 
 async function main() {
-    for(let number = 1; ; ++number) {
+    for(let number = 1; number <= 813; ++number) {
         const filepath = `./downloads/${number}.html`;
-        if(await fileExists(filepath, fs.constants.R_OK)) {
-            console.log(`jyi#${number} had been downloaded before.`);
-            continue;
-        }
+        // if(await fileExists(filepath, fs.constants.R_OK)) {
+        //     console.log(`jyi#${number} had been downloaded before.`);
+        //     continue;
+        // }
         try {
             await download(
                 `https://cons.judicial.gov.tw/jcc/zh-tw/jep03/show?expno=${number}`,
@@ -44,8 +54,9 @@ async function main() {
             );
             console.log(`jyi#${number} has been downloaded just now.`);
         }
-        catch {
-            console.log(`jyi#${number} does not exist yet.`);
+        catch (err) {
+            console.log(`jyi#${number} does not exist.`);
+            console.debug(err);
             break;
         }
     }

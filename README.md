@@ -1,6 +1,6 @@
 大法官解釋
 ===================
-從[司法院大法官](https://cons.judicial.gov.tw/jcc/modify/wall.html)網頁中擷取，並轉存成 JSON 。
+從[憲法法庭](https://cons.judicial.gov.tw/judcurrent.aspx?fid=2195)網頁中擷取，並轉存成 JSON 。
 
 ## 檔案
 輸出之檔案置於本專案 `json/` 中。

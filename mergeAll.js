@@ -2,15 +2,12 @@ const fs = require('fs');
 const stringify = obj => JSON.stringify(obj, null, "\t");
 
 const all = [{}];
-fs.readdirSync('./json/').forEach(filename => {
-    const match = /^(\d+)\.json$/.exec(filename);
-    if(!match) return;
-    const i = parseInt(match[1]);
-
-	const jyi = JSON.parse(fs.readFileSync('./json/' + i + '.json').toString());
+for(let i = 1; i <= 813; ++i) {
+	const jyi = JSON.parse(fs.readFileSync(`./json/${i}.json`).toString());
 	all[i] = jyi;
-	console.log(i);
-});
+	if(!(i % 64)) process.stdout.write('.');
+}
+process.stdout.write('\n');
 
 fs.writeFileSync('./json/all.json', stringify(all));
 fs.writeFileSync('./json/issues.json', stringify(all.map(elem => elem.issue)));
